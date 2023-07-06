@@ -20,15 +20,15 @@ class MainView(LoginView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         date = datetime.datetime.now()
-        # context['fruits'] = Fruit.objects.all()
+        context['fruits'] = Fruit.objects.all()
         context['messages'] = Message.objects.all()[:40][::-1]
-        # context['bank'] = Bank.objects.first()
+        context['bank'] = Bank.objects.first()
         # context['count_docs'] = len(Declaration.objects.filter(
         #     date__day=date.strftime('%d'),
         #     date__month=date.strftime('%m'),
         #     date__year=date.strftime('%Y'),
         # ))
-        # context['logs'] = Log.objects.all()
+        context['logs'] = Log.objects.all()
         return context
 
 

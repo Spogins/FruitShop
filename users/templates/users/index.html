@@ -5,11 +5,15 @@
     <title>FruitShop</title>
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" crossorigin="anonymous">
+          href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"
+          crossorigin="anonymous">
 
     <!-- Bootstrap 4 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css"
+          crossorigin="anonymous">
 </head>
 <body>
 <div class="wrapper">
@@ -53,49 +57,304 @@
     </div>
     <!-- End Nav -->
     <div class="row">
-        <div class="row">
-            <!-- Chat -->
-            <div class="col-xl-6" style="padding-top: 20px; padding-bottom: 30px">
-                <div id="chat" style="height: 300px; overflow-y: scroll; border: black solid 1px; padding: 15px">
-                    {% for message in messages %}
-                        <p style="margin: 0">
-                            {{ message.date|date:"H:i" }} {{ message.user.first_name }}: {{ message.text }}</p>
+        <div class=" col-xl-8 col-md-8 {% if not user.is_authenticated %}margin-top{% endif %} ">
+            <!-- Products -->
+            <div style="text-align: center; border: black solid 1px">Товары на складе</div>
+            <div class="table-responsive">
+                <table class="table-bordered text-center">
+                    <thead>
+                    <tr style="background-color: lightgrey; text-align: center">
+                        <th style="width: 18%; min-width: 125px">Название</th>
+                        <th style="width: 18%; min-width: 125px">Текущее количество</th>
+                        <th style="width: 36%; min-width: 400px">Действия</th>
+                        <th style="width: 28%; min-width: 300px">Последние операции</th>
+                        <th style="width: 0%"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for fruit in fruits %}
+                        <tr>
+                            <td>{{ fruit.name }}</td>
+                            <td><span id="fruit-amount-{{ fruit.id }}">{{ fruit.amount }}</span></td>
+                            <td style="padding: 5px">
+                                <input id="fruit-input-{{ fruit.id }}" type="number" class="form-control"
+                                       style="width: 120px; display: inline-block; padding-top: 1px"
+                                       placeholder="Кол-во">
+                                <button onclick="buyFruit(this.value)" type="button" class="btn buy"
+                                        style="width: 120px; display: inline-block; background-color: lightgreen"
+                                        value="{{ fruit.id }}">Купить
+                                </button>
+                                <button onclick="sellFruit(this.value)" type="button" class="btn sell"
+                                        style="width: 120px; display: inline-block; background-color: #ffe3ae"
+                                        value="{{ fruit.id }}">Продать
+                                </button>
+                            </td>
+                            <td>
+                                <span id="operation-fruit-{{ fruit.id }}">
+                                    {% if fruit.last_success_log %}
+                                        {{ fruit.last_success_log.date|date:"d.m.Y H:i" }} -
+                                        {% if fruit.last_success_log.operation == 'B' %}куплен{% else %}продан
+                                        {% endif %} товар "{{ fruit.name }}"(количество:
+                                        {{ fruit.last_success_log.amount }}) за {{ fruit.last_success_log.usd }} USD
+                                    {% else %}
+                                        Последние операции отсутствуют
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
                     {% endfor %}
-                </div>
-                <div class="row" style="padding-top: 10px">
-                    <div class="col-xl-8 col-md-6" style="padding-bottom: 10px">
-                        <input id="chat-message-input" type="text" class="form-control" placeholder="Текст сообщения">
-                    </div>
-                    <div class="col-xl-4 col-md-6" style="padding-bottom: 10px">
-                        <input id="chat-message-submit" type="button" class="btn btn-block send"
-                               style="background-color: #9eb3ff" value="Отправить">
-                    </div>
-                </div>
+                    </tbody>
+                </table>
             </div>
-            <!-- End Chat -->
+            <!-- End Products -->
+
+            <div class="row">
+                <!-- Chat -->
+                <div class="col-xl-6" style="padding-top: 20px; padding-bottom: 30px">
+                    <div id="chat" style="height: 300px; overflow-y: scroll; border: black solid 1px; padding: 15px">
+                        {% for message in messages %}
+                            <p style="margin: 0">
+                                {{ message.date|date:"H:i" }} {{ message.user.first_name }}: {{ message.text }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="row" style="padding-top: 10px">
+                        <div class="col-xl-8 col-md-6" style="padding-bottom: 10px">
+                            <input id="chat-message-input" type="text" class="form-control"
+                                   placeholder="Текст сообщения">
+                        </div>
+                        <div class="col-xl-4 col-md-6" style="padding-bottom: 10px">
+                            <input id="chat-message-submit" type="button" class="btn btn-block send"
+                                   style="background-color: #9eb3ff" value="Отправить">
+                        </div>
+                    </div>
+                </div>
+                <!-- End Chat -->
+
+
+            </div>
+
+        </div>
+        <!-- Logs -->
+        <div class="col-xl-4 col-md-4">
+            <div id="logs-area"
+                 style="height: 100%; max-height: 739px; overflow-y: scroll; border: black solid 1px; padding: 15px">
+                {% for log in logs %}
+                    <p style="margin: 0; color: {% if log.status == 'SS' %}green{% else %}red{% endif %}">
+                        {% if log.operation == 'B' %}
+                            {{ log.date|date:"d.m.Y H:i" }} - {{ log.get_status_display }}: Поставщик привёз
+                            товар "
+                            {{ log.fruit.name }}"(количество: {{ log.amount }}).
+                            {% if log.status == 'SS' %}
+                                Со счёта списано {{ log.usd }} USD, покупка завершена.
+                            {% else %}
+                                Недостаточно средств на счету, закупка отменена.
+                            {% endif %}
+                        {% else %}
+                            {{ log.date|date:"d.m.Y H:i" }} - {{ log.get_status_display }}: Продажа товара "
+                            {{ log.fruit.name }}"(количество: {{ log.amount }}).
+                            {% if log.status == 'SS' %}
+                                К счёту добавлено {{ log.usd }} USD, продажа успешна.
+                            {% else %}
+                                Недостаточно товара на складе, продажа отменена.
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                {% endfor %}
+            </div>
         </div>
     </div>
-
 </div>
 <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.js"
+        integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM="
+        crossorigin="anonymous"></script>
 <!-- Bootstrap 4 -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
         crossorigin="anonymous"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.2/js/toastr.min.js" crossorigin="anonymous"></script>
 <script>
     const userId = '{{ user.id }}'
+
     const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/chat/')
+    const fruitSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/fruit/')
+    const bankSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/bank/')
+
+    // Chat
     const chatArea = $('#chat')
     const messageInput = $('#chat-message-input')
-    const messageSubmit = $('#chat-message-subnit')
+    const messageSubmit = $('#chat-message-submit')
 
-    $(document).ready(function(){
-        chatScrollButton()
-    })
+    // Logs
+    const logsArea = $('#logs-area')
 
-    function chatScrollButton(){
-        console.log(1123)
+
+    $(document).ready(function () {
+        chatScrollToBottom()
+        logsScrollToBottom()
+    });
+
+
+    function chatScrollToBottom() {
+        chatArea.scrollTop(chatArea[0].scrollHeight)
+    }
+
+    function logsScrollToBottom() {
+        logsArea.scrollTop(logsArea[0].scrollHeight)
+    }
+
+    // Chat
+    chatSocket.onclose = function (e) {
+        console.error('Chat socket closed unexpectedly')
+    };
+
+    chatSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data)
+        chatArea.append(
+            '<p style="margin: 0">' + data.date + ' ' + data.username + ': ' + data.message + '</p>'
+        );
+        chatScrollToBottom()
+    };
+
+    messageInput.keyup(function (e) {
+        if (e.keyCode === 13) {
+            messageSubmit.click()
+        }
+    });
+
+    messageSubmit.click(function () {
+        {% if user.is_authenticated %}
+            if ((messageInput.val()) && !(messageInput.val().match(/^[ ]+$/))) {
+                chatSocket.send(JSON.stringify({
+                    'user': '{{ user.id }}',
+                    'message': messageInput.val()
+                }));
+            }
+        {% else %}
+            toastr.warning('Учетные данные не были предоставлены.', 'Не авторизирован')
+        {% endif %}
+        messageInput.val('')
+    });
+
+    // END Chat
+    // Fruits
+    fruitSocket.onclose = function (e) {
+        console.error('Fruit socket closed unexpectedly')
+    };
+
+    function buyFruit(fruit_id) {
+        let fruitInput = $('#fruit-input-' + fruit_id)
+        {% if user.is_authenticated %}
+            if (fruitInput.val() > 0) {
+                ajaxBuyFruit(fruit_id, +fruitInput.val())
+            } else {
+                fruitInput.addClass('error-amount')
+                toastr.error('Введённое значение некорректно.', 'Ошибка')
+                setTimeout(function () {
+                    fruitInput.removeClass('error-amount')
+                }, 5000)
+            }
+        {% else %}
+            toastr.warning('Учетные данные не были предоставлены.', 'Не авторизирован')
+        {% endif %}
+        fruitInput.val('')
+    }
+
+    function sellFruit(fruit_id) {
+        let fruitInput = $('#fruit-input-' + fruit_id)
+        {% if user.is_authenticated %}
+            if (fruitInput.val() > 0) {
+                ajaxSellFruit(fruit_id, +fruitInput.val())
+            } else {
+                fruitInput.addClass('error-amount')
+                toastr.error('Введённое значение некорректно или недостаточно товара на складе', 'Ошибка')
+                setTimeout(function () {
+                    fruitInput.removeClass('error-amount')
+                }, 5000)
+            }
+        {% else %}
+            toastr.warning('Учетные данные не были предоставлены.', 'Не авторизирован')
+        {% endif %}
+        fruitInput.val('')
+    }
+
+    function ajaxBuyFruit(fruit_id, amount) {
+        $.ajax({
+            url: '{% url "buy_or_sell_fruits" %}',
+            type: 'GET',
+            data: {
+                'type': 'buy',
+                'fruit_id': fruit_id,
+                'amount': amount
+            },
+            success: (data) => {
+                toastr.success(data.message, 'Успех')
+            },
+            error: (data) => {
+                toastr.error('Недостаточно средств на счету, закупка отменена.', 'Ошибка')
+            }
+        })
+    }
+
+    function ajaxSellFruit(fruit_id, amount) {
+        $.ajax({
+            url: '{% url "buy_or_sell_fruits" %}',
+            type: 'GET',
+            data: {
+                'type': 'sell',
+                'fruit_id': fruit_id,
+                'amount': amount
+            },
+            success: (data) => {
+                toastr.success('Продажа успешна', 'Успех')
+            },
+            error: (data) => {
+                toastr.error('Недостаточно товара на складе, продажа отменена.', 'Ошибка')
+            }
+        })
+    }
+
+    fruitSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data)
+        if (data.status === "ERROR") {
+            appendErrorLog(data)
+        } else {
+            appendSuccessLog(data)
+        }
+        logsScrollToBottom()
+    };
+
+    function appendErrorLog(data) {
+        if (data.operation === 'BUY') {
+            logsArea.append(
+                '<p style="margin: 0; color: red">' + data.date + ' - ' + data.status + ': Поставщик привёз товар "' + data.fruit_name + '"(количество: ' + data.amount + '). Недостаточно средств на счету, закупка отменена.</p>'
+            )
+        } else {
+            logsArea.append(
+                '<p style="margin: 0; color: red">' + data.date + ' - ' + data.status + ': Продажа товара "' + data.fruit_name + '"(количество: ' + data.amount + '). Недостаточно средств на счету, закупка отменена.</p>'
+            )
+        }
+    }
+
+    function appendSuccessLog(data) {
+        let fruitAmount = $('#fruit-amount-' + data.fruit_id)
+        if (data.operation === 'BUY') {
+            logsArea.append(
+                '<p style="margin: 0; color: green">' + data.date + ' - ' + data.status + ': Поставщик привёз товар "' + data.fruit_name + '"(количество: ' + data.amount + '). Со счёта списано ' + data.usd + ' USD, покупка завершена.</p>'
+            )
+            $('#operation-fruit-' + data.fruit_id).html(
+                '' + data.date + ' - куплен товар "' + data.fruit_name + '"(количество: ' + data.amount + ') за ' + data.usd + ' USD'
+            )
+            fruitAmount.html(+fruitAmount.text() + data.amount)
+        } else {
+            logsArea.append(
+                '<p style="margin: 0; color: green">' + data.date + ' - ' + data.status + ': Продажа товара "' + data.fruit_name + '"(количество: ' + data.amount + '). К счёту добавлено ' + data.usd + ' USD, продажа успешна.</p>'
+            )
+            $('#operation-fruit-' + data.fruit_id).html(
+                '' + data.date + ' - продан товар "' + data.fruit_name + '"(количество: ' + data.amount + ') за ' + data.usd + ' USD'
+            )
+            fruitAmount.html(+fruitAmount.text() - data.amount)
+        }
     }
 
 </script>

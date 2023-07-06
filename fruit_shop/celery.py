@@ -13,12 +13,3 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.autodiscover_tasks(['users', 'bank', 'fruits'])
 
-
-app.conf.beat_schedule = {
-    'subscription': {
-        'task': 'users.tasks.test',
-        # 'schedule': crontab(hour=0),
-        'schedule': crontab(),
-    },
-
-}

@@ -14,10 +14,9 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
 
-import bank
-import fruits
-import users
-from users import routing
+from bank import routing as routing_bank
+from fruits import routing as routing_fruit
+from users import routing as routing_user
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fruit_shop.settings')
 
@@ -27,7 +26,9 @@ application = ProtocolTypeRouter({
     "http": django_asgi_app,
     "websocket": AllowedHostsOriginValidator(
         AuthMiddlewareStack(URLRouter(
-            routing.websocket_urlpatterns
+            routing_user.websocket_urlpatterns
+            + routing_fruit.websocket_urlpatterns
+            + routing_bank.websocket_urlpatterns
         ))
     ),
 })
