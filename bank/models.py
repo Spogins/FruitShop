@@ -7,3 +7,13 @@ class Bank(models.Model):
 
     class Meta:
         verbose_name = 'Банк'
+
+
+class Declaration(models.Model):
+    file = models.FileField(upload_to='files/', verbose_name='Декларация')
+    date = models.DateTimeField(verbose_name='Дата')
+
+    class Meta:
+        verbose_name = 'Декларация'
+        verbose_name_plural = 'Декларации'
+        ordering = ['-date']
