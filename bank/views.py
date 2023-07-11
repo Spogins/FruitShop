@@ -15,7 +15,7 @@ channel_layer = channels.layers.get_channel_layer()
 
 # Create your views here.
 def update_bank_account(request):
-    if request.is_ajax() and request.method == 'GET':
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'GET':
         bank = Bank.objects.first()
         if not request.GET.get('withdraw'):
             bank.amount += int(float(request.GET.get('amount')))
@@ -34,7 +34,7 @@ def update_bank_account(request):
         return JsonResponse({"updated_amount": bank.amount}, status=200)
 
 def start_audit(request):
-    if request.is_ajax() and request.method == 'GET':
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'GET':
         user_id = request.GET.get('userId')
         if cache.get(f'user_{user_id}') is None:
             cache.set(f'user_{user_id}', 1)
@@ -43,7 +43,7 @@ def start_audit(request):
         return JsonResponse({}, status=400)
 
 def upload_declaration(request):
-    if request.is_ajax() and request.method == 'POST':
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'POST':
         Declaration.objects.create(file=request.FILES.get('file'), date=datetime.datetime.now())
 
         date = datetime.datetime.now()

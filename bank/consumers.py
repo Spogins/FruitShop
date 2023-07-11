@@ -5,8 +5,6 @@ from channels.generic.websocket import WebsocketConsumer
 
 
 class BankConsumer(WebsocketConsumer):
-    room_name = None
-    room_group_name = None
 
     def connect(self):
         self.room_name = "bank"
@@ -33,8 +31,6 @@ class BankConsumer(WebsocketConsumer):
 
 
 class AuditConsumer(WebsocketConsumer):
-    room_name = None
-    room_group_name = None
 
     def connect(self):
         self.room_name = f'audit_{self.scope["url_route"]["kwargs"]["room_name"]}'
@@ -56,8 +52,6 @@ class AuditConsumer(WebsocketConsumer):
 
 
 class DeclarationConsumer(WebsocketConsumer):
-    room_name = None
-    room_group_name = None
 
     def connect(self):
         self.room_name = "declaration"

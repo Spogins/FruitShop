@@ -241,6 +241,8 @@
     const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/chat/')
     const fruitSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/fruit/')
     const bankSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/bank/')
+    const auditSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/' + userId + '/')
+    const declarationSocket = new WebSocket('ws://' + window.location.host + '/ws/fruit-shop/declaration/')
 
     // Chat
     const chatArea = $('#chat')
@@ -249,6 +251,21 @@
 
     // Logs
     const logsArea = $('#logs-area')
+
+    // bank
+
+    const bankAmount = $('#bank-amount')
+    const bankAmountInput = $('#bank-account-input')
+    const accountTopUp = $('#top-up-account')
+    const accountWithdraw = $('#withdraw-account')
+
+    const startAudit = $('#start-audit')
+    const auditProgressBar = $('#audit-progress-bar')
+    const auditBar = $('#audit-bar')
+
+    const declarationInput = $('#declaration-input')
+    const declarationLabel = $('#declaration_label')
+    const declarationCount = $('#count-declarations')
 
 
     $(document).ready(function () {
@@ -418,6 +435,150 @@
             fruitAmount.html(+fruitAmount.text() - data.amount)
         }
     }
+
+     // Bank Region =====================================================================================================
+    function updateBankAccount(amount, withdraw) {
+        $.ajax({
+            url: '{% url "update_bank_account" %}',
+            type: 'GET',
+            data: {
+                'amount': amount,
+                'withdraw': withdraw
+            },
+            success: (data) => {},
+            error: (data) => {}
+        })
+    }
+
+    accountTopUp.click(function () {
+        {% if user.is_authenticated %}
+            const amount = +bankAmountInput.val()
+            if (amount <= 0 || !amount) {
+                bankAmountInput.addClass('error-amount')
+                toastr.error('Введённое значение некорректно.', 'Ошибка')
+                setTimeout(function () {bankAmountInput.removeClass('error-amount')}, 5000)
+            } else {
+                updateBankAccount(amount)
+            }
+            bankAmountInput.val('')
+        {% else %}
+            toastr.warning('Учетные данные не были предоставлены.', 'Не авторизирован')
+        {% endif %}
+        bankAmountInput.val('')
+    })
+
+    accountWithdraw.click(function () {
+        {% if user.is_authenticated %}
+            const amount = +bankAmountInput.val()
+            if (amount <= 0 || !amount || amount > +bankAmount.text()) {
+                bankAmountInput.addClass('error-amount')
+                toastr.error('Введённое значение некорректно.', 'Ошибка')
+                setTimeout(function () {bankAmountInput.removeClass('error-amount')}, 5000)
+            } else {
+                updateBankAccount(amount, withdraw=true)
+            }
+            bankAmountInput.val('')
+        {% else %}
+            toastr.warning('Учетные данные не были предоставлены.', 'Не авторизирован')
+        {% endif %}
+        bankAmountInput.val('')
+    })
+
+    bankSocket.onclose = function(e) {
+        console.error('Bank socket closed unexpectedly')
+    };
+
+    bankSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data)
+        bankAmount.html(data.amount)
+    };
+
+    // audit
+    startAudit.click(function () {
+        {% if user.is_authenticated %}
+            startAjaxAudit()
+        {% else %}
+            toastr.warning('Учетные данные не были предоставлены.', 'Не авторизирован')
+        {% endif %}
+    })
+
+    function startAjaxAudit() {
+        $.ajax({
+            url: '{% url "start_audit" %}',
+            type: 'GET',
+            data: {
+                'userId': userId,
+            },
+            success: (data) => {
+                console.log('ok')
+            },
+            error: (data) => {
+                toastr.warning('Бухгалтерский аудит уже в процессе выполнения.', 'Внимание')
+            }
+        })
+    }
+
+    auditSocket.onclose = function(e) {
+        console.error('Audit socket closed unexpectedly')
+    };
+
+    auditSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data)
+        auditBar.html(data.progress + '%')
+        auditProgressBar.css('width', data.progress + '%')
+        if (+data.progress === 100) {
+            toastr.success('Бухгалтерский аудит успешно проведен.', 'Успех')
+        }
+    };
+
+    // declarations
+    declarationInput.change(function() {
+      let file = this.files[0]
+      if (file) {
+          if ((file.size / 1000000) > 1) {
+              toastr.warning('Размер файла не должен превышать 20МБ', 'Внимание')
+              return
+          }
+          declarationLabel.attr('title', file.name)
+          uploadDeclaration(file)
+      } else {
+          declarationLabel.attr('title', "Файл не выбран")
+      }
+    });
+
+    function uploadDeclaration(file) {
+        let format_data = new FormData()
+        format_data.append('file', file)
+        $.ajax({
+            url: '{% url "upload_declaration" %}',
+            type: 'POST',
+            enctype: 'multipart/form-data',
+            data: format_data,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            success: (data) => {
+                declarationLabel.attr('title', 'Файл не выбран')
+                toastr.success('Декларация успешно загружена', 'Успех')
+            },
+            error: (error) => {},
+            cache: false,
+            contentType: false,
+            processData: false,
+        })
+    }
+
+    declarationSocket.onclose = function(e) {
+        console.error('Declaration socket closed unexpectedly')
+    };
+
+    declarationSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data)
+        console.log(data)
+        declarationCount.html(data.count_docs)
+    };
+    // End Bank Region =================================================================================================
 
 </script>
 </body>
