@@ -5,7 +5,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import render
 from django.urls import reverse_lazy
 
-from bank.models import Bank
+from bank.models import Bank, Declaration
 from fruits.models import Fruit, Log
 from users.models import Message
 
@@ -23,11 +23,11 @@ class MainView(LoginView):
         context['fruits'] = Fruit.objects.all()
         context['messages'] = Message.objects.all()[:40][::-1]
         context['bank'] = Bank.objects.first()
-        # context['count_docs'] = len(Declaration.objects.filter(
-        #     date__day=date.strftime('%d'),
-        #     date__month=date.strftime('%m'),
-        #     date__year=date.strftime('%Y'),
-        # ))
+        context['count_docs'] = len(Declaration.objects.filter(
+            date__day=date.strftime('%d'),
+            date__month=date.strftime('%m'),
+            date__year=date.strftime('%Y'),
+        ))
         context['logs'] = Log.objects.all()
         return context
 

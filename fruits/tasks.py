@@ -25,10 +25,8 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 
-
 @app.task
 def task_buy_fruits(fruit_id, amount=None, cost_for_unit=None):
-    print(cost_for_unit)
     amounts = [random.randint(1, 10), random.randint(10, 20), random.randint(1, 10), random.randint(5, 15)]
     price = [4, 1, 3, 2]
     fruit = Fruit.objects.get(pk=fruit_id)
@@ -107,7 +105,6 @@ def task_sell_fruits(fruit_id, amount=None, cost_for_unit=None):
             "operation": log.get_operation_display()
         }
     )
-    print(log.get_status_display())
     if not log.get_status_display() == 'ERROR':
         fruit.amount -= amount
         bank.amount += usd
@@ -123,104 +120,4 @@ def task_sell_fruits(fruit_id, amount=None, cost_for_unit=None):
     )
 
     return 'ok sell'
-
-# @app.task
-# def task_buy_fruits(fruit_id, amount=None, cost_for_unit=None):
-#     fruit = Fruit.objects.get(pk=fruit_id)
-#     cost_for_unit = cost_for_unit if cost_for_unit else random.choice(range(1, 5))
-#     amount = amount if amount else random.choice(range(1, 21))
-#     bank = Bank.objects.first()
-#     usd = cost_for_unit * amount
-#
-#     log = Log.objects.create(
-#         fruit=fruit,
-#         status=Status.ERROR if usd > bank.amount else Status.SUCCESS,
-#         date=datetime.datetime.now(),
-#         amount=amount,
-#         usd=usd,
-#         operation=Operation.BUY
-#     )
-#
-#     async_to_sync(channel_layer.group_send)(
-#         'shop_fruit',
-#         {
-#             "type": "update.fruit",
-#             "status": log.get_status_display(),
-#             "fruit_id": fruit.id,
-#             "fruit_name": fruit.name,
-#             "date": log.date.strftime('%d.%m.%Y %H:%M'),
-#             "amount": amount,
-#             "usd": usd,
-#             "operation": log.get_operation_display()
-#         }
-#     )
-#
-#     fruit.amount += amount
-#     bank.amount -= usd
-#     fruit.save()
-#     bank.save()
-#
-#     async_to_sync(channel_layer.group_send)(
-#         shop_bank
-#     ',
-#     {
-#         "type": "update.bank.account",
-#         "amount": bank.amount
-#     }
-#     )
-#
-#     schedule, created = IntervalSchedule.objects.get_or_create(
-#         every=random.choice(range(5, 21)),
-#         period=IntervalSchedule.SECONDS,
-#     )
-#     # task = PeriodicTask.objects.get(task='users.tasks.task_jester')
-#     # task.interval = schedule
-#     # task.save()
-#     # PeriodicTasks.changed(task)
-#     return 'OK'
-#
-#
-# @app.task
-# def task_sell_fruits(fruit_id, amount=None, cost_for_unit=None):
-#     fruit = Fruit.objects.get(pk=fruit_id)
-#     cost_for_unit = cost_for_unit if cost_for_unit else random.choice(range(1, 5))
-#     amount = amount if amount else random.choice(range(1, 21))
-#     bank = Bank.objects.first()
-#     usd = cost_for_unit * amount
-#
-#     log = Log.objects.create(
-#         fruit=fruit,
-#         status=Status.ERROR if amount > fruit.amount else Status.SUCCESS,
-#         date=datetime.datetime.now(),
-#         amount=amount,
-#         usd=usd,
-#         operation=Operation.SELL
-#     )
-#
-#     async_to_sync(channel_layer.group_send)(
-#         'shop_fruit',
-#         {
-#             "type": "update.fruit",
-#             "status": log.get_status_display(),
-#             "fruit_id": fruit.id,
-#             "fruit_name": fruit.name,
-#             "date": log.date.strftime('%d.%m.%Y %H:%M'),
-#             "amount": amount,
-#             "usd": usd,
-#             "operation": log.get_operation_display()
-#         }
-#     )
-#
-#     fruit.amount -= amount
-#     bank.amount += usd
-#     fruit.save()
-#     bank.save()
-#
-#     async_to_sync(channel_layer.group_send)(
-#         'shop_bank',
-#         {
-#             "type": "update.bank.account",
-#             "amount": bank.amount
-#         }
-#     )
 

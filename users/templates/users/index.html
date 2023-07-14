@@ -436,7 +436,7 @@
         }
     }
 
-     // Bank Region =====================================================================================================
+    // Bank Region =====================================================================================================
     function updateBankAccount(amount, withdraw) {
         $.ajax({
             url: '{% url "update_bank_account" %}',
@@ -445,8 +445,10 @@
                 'amount': amount,
                 'withdraw': withdraw
             },
-            success: (data) => {},
-            error: (data) => {}
+            success: (data) => {
+            },
+            error: (data) => {
+            }
         })
     }
 
@@ -456,7 +458,9 @@
             if (amount <= 0 || !amount) {
                 bankAmountInput.addClass('error-amount')
                 toastr.error('Введённое значение некорректно.', 'Ошибка')
-                setTimeout(function () {bankAmountInput.removeClass('error-amount')}, 5000)
+                setTimeout(function () {
+                    bankAmountInput.removeClass('error-amount')
+                }, 5000)
             } else {
                 updateBankAccount(amount)
             }
@@ -473,9 +477,11 @@
             if (amount <= 0 || !amount || amount > +bankAmount.text()) {
                 bankAmountInput.addClass('error-amount')
                 toastr.error('Введённое значение некорректно.', 'Ошибка')
-                setTimeout(function () {bankAmountInput.removeClass('error-amount')}, 5000)
+                setTimeout(function () {
+                    bankAmountInput.removeClass('error-amount')
+                }, 5000)
             } else {
-                updateBankAccount(amount, withdraw=true)
+                updateBankAccount(amount, withdraw = true)
             }
             bankAmountInput.val('')
         {% else %}
@@ -484,11 +490,11 @@
         bankAmountInput.val('')
     })
 
-    bankSocket.onclose = function(e) {
+    bankSocket.onclose = function (e) {
         console.error('Bank socket closed unexpectedly')
     };
 
-    bankSocket.onmessage = function(e) {
+    bankSocket.onmessage = function (e) {
         const data = JSON.parse(e.data)
         bankAmount.html(data.amount)
     };
@@ -518,11 +524,11 @@
         })
     }
 
-    auditSocket.onclose = function(e) {
+    auditSocket.onclose = function (e) {
         console.error('Audit socket closed unexpectedly')
     };
 
-    auditSocket.onmessage = function(e) {
+    auditSocket.onmessage = function (e) {
         const data = JSON.parse(e.data)
         auditBar.html(data.progress + '%')
         auditProgressBar.css('width', data.progress + '%')
@@ -532,18 +538,18 @@
     };
 
     // declarations
-    declarationInput.change(function() {
-      let file = this.files[0]
-      if (file) {
-          if ((file.size / 1000000) > 1) {
-              toastr.warning('Размер файла не должен превышать 20МБ', 'Внимание')
-              return
-          }
-          declarationLabel.attr('title', file.name)
-          uploadDeclaration(file)
-      } else {
-          declarationLabel.attr('title', "Файл не выбран")
-      }
+    declarationInput.change(function () {
+        let file = this.files[0]
+        if (file) {
+            if ((file.size / 1000000) > 1) {
+                toastr.warning('Размер файла не должен превышать 20МБ', 'Внимание')
+                return
+            }
+            declarationLabel.attr('title', file.name)
+            uploadDeclaration(file)
+        } else {
+            declarationLabel.attr('title', "Файл не выбран")
+        }
     });
 
     function uploadDeclaration(file) {
@@ -562,18 +568,19 @@
                 declarationLabel.attr('title', 'Файл не выбран')
                 toastr.success('Декларация успешно загружена', 'Успех')
             },
-            error: (error) => {},
+            error: (error) => {
+            },
             cache: false,
             contentType: false,
             processData: false,
         })
     }
 
-    declarationSocket.onclose = function(e) {
+    declarationSocket.onclose = function (e) {
         console.error('Declaration socket closed unexpectedly')
     };
 
-    declarationSocket.onmessage = function(e) {
+    declarationSocket.onmessage = function (e) {
         const data = JSON.parse(e.data)
         console.log(data)
         declarationCount.html(data.count_docs)
