@@ -86,7 +86,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [('redis', 6379)],
         }}
 }
 
@@ -150,8 +150,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CELERY_BROKER_URL = f"redis://127.0.0.1:6379/0"
-CELERY_RESULT_BACKEND = f"redis://127.0.0.1:6379/0"
+CELERY_BROKER_URL = f"redis://redis:6379/0"
+CELERY_RESULT_BACKEND = f"redis://redis:6379/0"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_ALWAYS_EAGER = True
@@ -159,7 +159,7 @@ CELERY_ALWAYS_EAGER = True
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://127.0.0.1:6379/1",
+        "LOCATION": f"redis://redis:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }

@@ -18,7 +18,7 @@ class Command(BaseCommand):
             print('Admin created')
             
             user = User.objects.create(
-                username="lastatar",
+                username="user",
                 first_name="Ostin",
                 last_name="Pawers",
                 email="user@user.com"

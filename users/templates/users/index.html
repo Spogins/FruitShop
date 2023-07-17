@@ -17,7 +17,6 @@
 </head>
 <body>
 <div class="wrapper">
-    <!-- Nav -->
     <div style="height: 50px; background-color: #e3fbce">
         {% if not user.is_authenticated %}
             <div class="row" style="padding-right: 5px; padding-left: 10px">
@@ -55,10 +54,8 @@
             </span>
         {% endif %}
     </div>
-    <!-- End Nav -->
     <div class="row">
         <div class=" col-xl-8 col-md-8 {% if not user.is_authenticated %}margin-top{% endif %} ">
-            <!-- Products -->
             <div style="text-align: center; border: black solid 1px">Товары на складе</div>
             <div class="table-responsive">
                 <table class="table-bordered text-center">
@@ -106,10 +103,7 @@
                     </tbody>
                 </table>
             </div>
-            <!-- End Products -->
-
             <div class="row">
-                <!-- Chat -->
                 <div class="col-xl-6" style="padding-top: 20px; padding-bottom: 30px">
                     <div id="chat" style="height: 300px; overflow-y: scroll; border: black solid 1px; padding: 15px">
                         {% for message in messages %}
@@ -128,8 +122,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- End Chat -->
-                <!-- Bank -->
                 <div class="col-xl-6" style="padding-top: 20px; padding-bottom: 30px">
                     <div style="height: 100%; border: black solid 1px; padding: 15px">
                         <h5 class="text-center" style="padding-bottom: 20px">БАНК</h5>
@@ -148,15 +140,15 @@
                         <div class="row" style="padding-top: 30px">
                             <div class="col-xl-6">
                                 <input id="start-audit" type="button" class="btn btn-block audit"
-                                       value="Провести бухгалтерский аудит" style="background-color: #f6a2bf">
+                                       value="Провести бухгалтерский аудит" style="background-color: #e3fbce">
                             </div>
                             <div class="col-xl-6" style="padding-top: 10px">
                                 <div class="progress">
                                     <div id="audit-progress-bar" class="progress-bar progress-bar-success"
                                          role="progressbar" aria-valuenow="40"
                                          aria-valuemin="0" aria-valuemax="100"
-                                         style="width: 0%; background-color: #f6a2bf; border-radius: 10px">
-                                        <span id="audit-bar" style="font-weight: bold"></span>
+                                         style="width: 0%; background-color: #e3fbce; border-radius: 10px">
+                                        <span id="audit-bar" style="font-weight: bold; color: black;"></span>
                                     </div>
                                 </div>
                             </div>
@@ -179,7 +171,7 @@
                         <div class="row" style="padding-top: 10px">
                             <div class="col-xl-6">
                                 <label for="declaration-input" id="declaration_label" class="btn btn-block"
-                                       style="background-color: cornflowerblue; font-weight: normal"
+                                       style="background-color: #9eb3ff; font-weight: normal"
                                        title="Файл не выбран">Загрузить декларацию</label>
                                 <input id="declaration-input"
                                        type="{% if user.is_authenticated %}file{% else %}button{% endif %}"
@@ -191,12 +183,8 @@
                         </div>
                     </div>
                 </div>
-                <!-- End Bank -->
-
             </div>
-
         </div>
-        <!-- Logs -->
         <div class="col-xl-4 col-md-4">
             <div id="logs-area"
                  style="height: 100%; max-height: 739px; overflow-y: scroll; border: black solid 1px; padding: 15px">
@@ -435,8 +423,6 @@
             fruitAmount.html(+fruitAmount.text() - data.amount)
         }
     }
-
-    // Bank Region =====================================================================================================
     function updateBankAccount(amount, withdraw) {
         $.ajax({
             url: '{% url "update_bank_account" %}',
@@ -562,7 +548,8 @@
             data: format_data,
             headers: {
                 "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": getCookie("csrftoken"),
+                "X-CSRFToken": '{{ csrf_token }}',
+                {#"X-CSRFToken": getCookie("csrftoken"),#}
             },
             success: (data) => {
                 declarationLabel.attr('title', 'Файл не выбран')
@@ -585,7 +572,7 @@
         console.log(data)
         declarationCount.html(data.count_docs)
     };
-    // End Bank Region =================================================================================================
+
 
 </script>
 </body>
