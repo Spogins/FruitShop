@@ -28,7 +28,7 @@ class MainView(LoginView):
             date__month=date.strftime('%m'),
             date__year=date.strftime('%Y'),
         ))
-        context['logs'] = Log.objects.all()
+        context['logs'] = Log.objects.all()[:20][::-1]
         return context
 
 
